@@ -1,7 +1,6 @@
 import os
 import yt_dlp
 
-
 def prompt_choice(prompt, choices):
     print(prompt)
     for index, choice in enumerate(choices, start=1):
@@ -72,32 +71,33 @@ def main():
         info = ydl.extract_info(url, download=False)
         formats = info.get('formats', [])
 
-    type_choices = ['mp3', 'mp4', 'webm', 'Show all available formats']
+    type_choices = ['mp3', 'mp4', 'webm', 'Show all available formats', 'Combination of best Audio and Video Stream']
     type_index = prompt_choice('Choose the download format type:', type_choices)
     download_format = type_choices[type_index]
 
-    download_quality = None
-    if download_format in ('mp4', 'webm'):
-        download_quality = choose_download_quality()
+    if download_format != 'Combination of best Audio and Video Stream':
+        download_quality = None
+        if download_format in ('mp4', 'webm'):
+            download_quality = choose_download_quality()
 
-    filtered_formats = filter_formats(
-        formats,
-        download_format if download_format != 'Show all available formats' else 'all',
-        download_quality,
-    )
-    if not filtered_formats:
-        print('No available formats match your selection.')
-        return
+        filtered_formats = filter_formats(
+            formats,
+            download_format if download_format != 'Show all available formats' else 'all',
+            download_quality,
+        )
+        if not filtered_formats:
+            print('No available formats match your selection.')
+            return
 
-    selected_format_index = prompt_choice(
-        'Choose the exact format to download:',
-        [format_label(fmt) for fmt in filtered_formats],
-    )
-    selected_format = filtered_formats[selected_format_index]
+        selected_format_index = prompt_choice(
+            'Choose the exact format to download:',
+            [format_label(fmt) for fmt in filtered_formats],
+        )
+        selected_format = filtered_formats[selected_format_index]
 
     ydl_opts = {
         'outtmpl': os.path.join(target, '%(title)s.%(ext)s'),
-        'format': selected_format['format_id'],
+        'format': selected_format['format_id'] if download_format != 'Combination of best Audio and Video Stream' else "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
     }
 
     if download_format == 'mp3':
